@@ -1,0 +1,54 @@
+# Env + secrets
+.env
+.env.local
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Data (local-only, regenerated)
+data/uploads/
+data/chroma_db/
+data/docstore/
+data/checkpoints.db
+data/checkpoints.db-*
+data/ingested_manifest.json
+
+# Logs
+logs/*.jsonl
+logs/*.log
+
+# IDE / local tooling
+.idea/
+.vscode/
+.claude/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pre-commit
+.secrets.baseline
+
+# Local captures / screenshots / recordings (not checked in)
+Results/
+*.mp4
+/1.png
+/2.png
+/screenshot*.png

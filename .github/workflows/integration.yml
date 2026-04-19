@@ -1,0 +1,56 @@
+name: Integration
+
+on:
+  schedule:
+    - cron: "0 6 * * *"  # 06:00 UTC daily
+  workflow_dispatch:
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      ollama:
+        image: ollama/ollama:latest
+        ports:
+          - 11434:11434
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Install system deps
+        run: sudo apt-get update && sudo apt-get install -y poppler-utils tesseract-ocr libmagic1
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Wait for Ollama
+        run: |
+          for i in {1..30}; do
+            curl -sf http://localhost:11434/api/tags && break
+            sleep 2
+          done
+
+      - name: Pull models
+        env:
+          OLLAMA_HOST: http://localhost:11434
+        run: |
+          # CI uses smaller models to keep runtime down. Production defaults to 7B/8B.
+          for m in qwen2.5vl:3b llama3.2:3b nomic-embed-text; do
+            curl -sf http://localhost:11434/api/pull -d "{\"name\":\"$m\"}"
+          done
+
+      - name: Integration + E2E
+        env:
+          OLLAMA_HOST: http://localhost:11434
+          GENERATOR_MODEL: qwen2.5vl:3b
+          CRITIQUE_MODEL: llama3.2:3b
+        run: |
+          pytest tests/integration tests/e2e -m "integration or e2e" --maxfail=3
